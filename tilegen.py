@@ -6,11 +6,9 @@ import re
 import json
 
 import subprocess
-from subprocess import DEVNULL, STDOUT, check_call, CalledProcessError
+from subprocess import DEVNULL, STDOUT, check_call
 
 from collections import OrderedDict
-from io import StringIO
-from PIL import Image
 
 
 debug = lambda *x: None
@@ -23,43 +21,36 @@ def main():
     try:
         check_call(['convert', '-help'], stdout=DEVNULL, stderr=STDOUT)
     except FileNotFoundError:
-        sys.exit('Install ImageMagick or put magick in your path')
+        sys.exit('Install ImageMagick or put convert in your path')
 
     try:
         check_call(['identify', '-help'], stdout=DEVNULL, stderr=STDOUT)
     except FileNotFoundError:
         sys.exit('Install ImageMagick or put identify in your path')
 
-    try:
-        check_call(['convert', '-help'], stdout=DEVNULL, stderr=STDOUT)
-    except FileNotFoundError:
-        sys.exit('Install ImageMagick or put convert in your path')
-
     if not os.path.exists(sys.argv[1]):
         sys.exit(f'File {sys.argv[1]} not found')
-    with Image.open(sys.argv[1]) as image:
-        image_w, image_h = image.size
+    tmp = subprocess.check_output(['identify', '-format', '%wx%h', sys.argv[1]]).decode('utf-8')
+    dim = re.search('(\d+)x(\d+)', tmp)
+    image_w, image_h = int(dim.group(1)), int(dim.group(2))
 
     if not (tile_dim := re.search('(\d+)x(\d+)', sys.argv[2])):
         sys.exit('Wrong tile dimensions, <number>x<number> expected')
-    else:
-        tile_w, tile_h = int(tile_dim.group(1)), int(tile_dim.group(2))
+    tile_w, tile_h = int(tile_dim.group(1)), int(tile_dim.group(2))
     if min(tile_w, tile_h) <= 0:
         sys.exit('Tile dimensions should be greater than zero')
 
     if not os.sep in sys.argv[3]:
         sys.exit('Must specify output directory')
-    else:
-        tile_dir = sys.argv[3][0:sys.argv[3].index(os.sep)]
-        tile_prefix = sys.argv[3][sys.argv[3].index(os.sep) + 1:]
+    tile_dir = sys.argv[3][0:sys.argv[3].index(os.sep)]
+    tile_prefix = sys.argv[3][sys.argv[3].index(os.sep) + 1:]
 
     if os.path.exists(tile_dir):
         sys.exit('Output directory already exists')
 
     if not (tileset_dim := re.search('(\d+)x(\d+)', sys.argv[4])):
         sys.exit('Wrong tileset dimensions, <number>x<number> expected')
-    else:
-        tileset_w, tileset_h = int(tileset_dim.group(1)), int(tileset_dim.group(2))
+    tileset_w, tileset_h = int(tileset_dim.group(1)), int(tileset_dim.group(2))
     if min(tileset_w, tileset_h) <= 0:
         sys.exit('Tileset dimensions should be greater than zero')
 
@@ -87,11 +78,12 @@ def main():
             else:
                 chksums[chksum] = tile_num
             tiles.append(list(chksums.keys()).index(chksum) + 1)
+    debug(f'Removed {deleted} files')
 
     line = 0
     cmd = ['convert']
 
-    for key, value in chksums.items():
+    for value in chksums.values():
         if line == 0:
             cmd.append('(')
         cmd.append(os.path.join(tile_dir, f'{tile_prefix}{value}.png'))
@@ -161,7 +153,6 @@ def main():
     }
     with open(os.path.join(tile_dir, 'map.json'), 'w') as jsonmap:
         jsonmap.write(json.dumps(tiled))
-    debug(f'Removed {deleted} files')
 
 if __name__ == '__main__':
     main()
