@@ -6,7 +6,7 @@ import re
 import json
 
 import subprocess
-from subprocess import DEVNULL, STDOUT, check_call
+from subprocess import DEVNULL, STDOUT, check_call, CalledProcessError
 
 from collections import OrderedDict
 from io import StringIO
@@ -22,17 +22,17 @@ def main():
 
     try:
         check_call(['magick', '-help'], stdout=DEVNULL, stderr=STDOUT)
-    except CalledProcessError:
+    except FileNotFoundError:
         sys.exit('Install ImageMagick or put magick in your path')
 
     try:
         check_call(['identify', '-help'], stdout=DEVNULL, stderr=STDOUT)
-    except CalledProcessError:
+    except FileNotFoundError:
         sys.exit('Install ImageMagick or put identify in your path')
 
     try:
         check_call(['convert', '-help'], stdout=DEVNULL, stderr=STDOUT)
-    except CalledProcessError:
+    except FileNotFoundError:
         sys.exit('Install ImageMagick or put convert in your path')
 
     if not os.path.exists(sys.argv[1]):
