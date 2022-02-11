@@ -1,7 +1,7 @@
 tilegen.py
 ==========
 
-Splits big image into smaller tiles, checks MD5 signature for repeated images, and delete them if found. After the purge, a new smaller tileset is created. **Requires ImageMagick to work.** Usage is best explained by example:
+Splits big image into smaller tiles, checks MD5 signature for repeated images, and deletes them if found. After the purge, a new smaller tileset is created according to specified dimensions. **Requires ImageMagick and Python 3.10 to work.** Usage is best explained by example:
 
 ``` 
 ./tilegen.py ./sample/maniac.png 16x16 result/tile 256x192
