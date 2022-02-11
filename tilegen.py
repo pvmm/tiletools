@@ -21,7 +21,7 @@ def main():
         sys.exit(f'usage: {sys.argv[0]} big_image_file tile_dimensions tilemap_prefix tileset_dimensions')
 
     try:
-        check_call(['magick', '-help'], stdout=DEVNULL, stderr=STDOUT)
+        check_call(['convert', '-help'], stdout=DEVNULL, stderr=STDOUT)
     except FileNotFoundError:
         sys.exit('Install ImageMagick or put magick in your path')
 
@@ -67,7 +67,7 @@ def main():
     os.mkdir(tile_dir)
 
     debug('Cropping tiles from image...')
-    check_call(['magick', sys.argv[1], '+repage', '-crop', sys.argv[2], f'{sys.argv[3]}%04d.png'])
+    check_call(['convert', sys.argv[1], '+repage', '-crop', sys.argv[2], f'{sys.argv[3]}%04d.png'])
 
     deleted = 0
     chksums = OrderedDict()
