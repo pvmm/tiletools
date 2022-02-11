@@ -66,7 +66,7 @@ def main():
 
     with open(os.path.join(tile_dir, 'removed.txt'), 'a+') as output:
         for filename in sorted(os.listdir(tile_dir)):
-            tile_num = match.group(0) if (match := re.search("[0-9]+", filename)) else None
+            tile_num = match.group(1) if (match := re.search("([0-9]+).png", filename)) else None
             if tile_num is None: continue
             path = os.path.join(tile_dir, filename)
             chksum = subprocess.check_output(['identify', '-verbose', '-format', '%#', path]).strip()
