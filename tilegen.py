@@ -58,7 +58,7 @@ def main():
     os.mkdir(tile_dir)
 
     debug('Cropping tiles from image...')
-    check_call(['convert', sys.argv[1], '+repage', '-crop', sys.argv[2], f'{sys.argv[3]}%04d.png'])
+    check_call(['convert', sys.argv[1], '+repage', '-crop', sys.argv[2], f'PNG32:{sys.argv[3]}%04d.png'])
 
     deleted = 0
     chksums = OrderedDict()
