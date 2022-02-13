@@ -10,3 +10,11 @@ Splits big image into smaller tiles, checks MD5 signature for repeated images, a
 will create `result` directory and, inside it, tiles from `tile0000.png` to `tilennnn.png` where `nnnn` is the number of times a 16x16 tile fits inside `sample/maniac.png`. Identical tiles are removed if found, so the actual number of tiles may be smaller than that. A list of removed tiles called `removed.txt` will be created inside `result` along with a *Tiled*-compatible `map.json` and a new tileset image called `tileset256x192.png`.
 
 ![Tiled with generated sample map](/docs/tiled.png "Tiled with generated sample map")
+
+TODO
+----
+
+Some features I may write some day:
+
+* Detection of near-identical tiles; 
+* Detection of color-swapped tiles;
