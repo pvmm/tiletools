@@ -4,6 +4,7 @@ import sys
 import os
 import re
 import json
+import glob
 
 import subprocess
 from subprocess import DEVNULL, STDOUT, check_call
@@ -12,81 +13,95 @@ from collections import OrderedDict
 
 
 debug = lambda *x: None
+#debug = lambda *x: print(*x)
 
 
 def main():
-    if len(sys.argv) != 5:
-        sys.exit(f'usage: {sys.argv[0]} big_image_file tile_dimensions tilemap_prefix tileset_dimensions')
+    if len(sys.argv) <= 5 or '--help' in sys.argv:
+        sys.exit(f'usage: {sys.argv[0]} big_image_files -- tile_dimensions tilemap_subdir tileset_dimensions')
+
+    if '--' in sys.argv:
+        files = sys.argv[1:sys.argv.index('--')]
+        parms = sys.argv[sys.argv.index('--') + 1:]
+    else:
+        files = sys.argv[1:1+1]
+        parms = sys.argv[2:]
 
     try:
         check_call(['convert', '-help'], stdout=DEVNULL, stderr=STDOUT)
     except FileNotFoundError:
-        sys.exit('Install ImageMagick or put convert in your path')
+        sys.exit('Install ImageMagick or put the `convert` executable in your path')
 
     try:
         check_call(['identify', '-help'], stdout=DEVNULL, stderr=STDOUT)
     except FileNotFoundError:
-        sys.exit('Install ImageMagick or put identify in your path')
+        sys.exit('Install ImageMagick or put the `identify` executable in your path')
 
-    if not os.path.exists(sys.argv[1]):
-        sys.exit(f'File {sys.argv[1]} not found')
-    tmp = subprocess.check_output(['identify', '-format', '%wx%h', sys.argv[1]]).decode('utf-8')
-    dim = re.search('(\d+)x(\d+)', tmp)
-    image_w, image_h = int(dim.group(1)), int(dim.group(2))
+    if len(files) == 0:
+        sys.exit('No input file specified')
 
-    if not (tile_dim := re.search('(\d+)x(\d+)', sys.argv[2])):
+    image_w = image_h = 0
+    for i, file in enumerate(files):
+        if not os.path.exists(file):
+            sys.exit(f'File {file} not found')
+        tmp = subprocess.check_output(['identify', '-format', '%wx%h', file]).decode('utf-8')
+        dim = re.search('(\d+)x(\d+)', tmp)
+        w, h = int(dim.group(1)), int(dim.group(2))
+        if i == 0:
+            image_w = w
+            image_h = h
+
+    if not (tile_dim := re.search('(\d+)x(\d+)', parms[0])):
         sys.exit('Wrong tile dimensions, <number>x<number> expected')
     tile_w, tile_h = int(tile_dim.group(1)), int(tile_dim.group(2))
     if min(tile_w, tile_h) <= 0:
         sys.exit('Tile dimensions should be greater than zero')
 
-    if not os.sep in sys.argv[3]:
-        sys.exit('Must specify output directory')
-    tile_dir = sys.argv[3][0:sys.argv[3].index(os.sep)]
-    tile_prefix = sys.argv[3][sys.argv[3].index(os.sep) + 1:]
-
-    if os.path.exists(tile_dir):
-        sys.exit('Output directory already exists')
-
-    if not (tileset_dim := re.search('(\d+)x(\d+)', sys.argv[4])):
+    if not (tileset_dim := re.search('(\d+)x(\d+)', parms[2])):
         sys.exit('Wrong tileset dimensions, <number>x<number> expected')
     tileset_w, tileset_h = int(tileset_dim.group(1)), int(tileset_dim.group(2))
     if min(tileset_w, tileset_h) <= 0:
         sys.exit('Tileset dimensions should be greater than zero')
 
-    debug(f'Creating subdirectory {tile_dir}...')
-    os.mkdir(tile_dir)
+    if not os.path.exists(parms[1]):
+        debug(f'Creating subdirectory {parms[1]}...')
+        os.mkdir(parms[1])
 
     debug('Cropping tiles from image...')
-    check_call(['convert', sys.argv[1], '+repage', '-crop', sys.argv[2], f'PNG32:{sys.argv[3]}%04d.png'])
+    for path in files:
+        prefix = os.path.join(parms[1], os.path.split(os.path.splitext(path)[0])[1])
+        debug(f'creating {path} tiles...')
+        check_call(['convert', path, '+repage', '-crop', parms[0], f'PNG32:{prefix}_%04d_.png'])
 
     deleted = 0
     chksums = OrderedDict()
     tiles = []
 
-    with open(os.path.join(tile_dir, 'removed.txt'), 'a+') as output:
-        for filename in sorted(os.listdir(tile_dir)):
-            tile_num = match.group(1) if (match := re.search("([0-9]+).png", filename)) else None
-            if tile_num is None: continue
-            path = os.path.join(tile_dir, filename)
-            chksum = subprocess.check_output(['identify', '-verbose', '-format', '%#', path]).strip()
-            if chksum in chksums:
-                deleted += 1
-                debug(f'Deleting file {path}: identical tile already accounted for')
-                print(path, file=output)
-                os.remove(path)
-            else:
-                chksums[chksum] = tile_num
-            tiles.append(list(chksums.keys()).index(chksum) + 1)
+    with open(os.path.join(parms[1], 'removed.txt'), 'a+') as output:
+        for i, source in enumerate(files):
+            prefix = os.path.splitext(source)[0]
+            for path in sorted(glob.glob(os.path.join(parms[1], f'{prefix}_*_.png'))):
+                chksum = subprocess.check_output(['identify', '-verbose', '-format', '%#', path]).strip()
+                if chksum in chksums:
+                    deleted += 1
+                    debug(f'Deleting file {path}: identical tile already accounted for')
+                    print(path, file=output)
+                    os.remove(path)
+                else:
+                    chksums[chksum] = path
+                # just generate json of first image
+                if i == 0:
+                    tiles.append(list(chksums.keys()).index(chksum) + 1)
+
     debug(f'Removed {deleted} files')
 
     line = 0
     cmd = ['convert']
 
-    for value in chksums.values():
+    for path in chksums.values():
         if line == 0:
             cmd.append('(')
-        cmd.append(os.path.join(tile_dir, f'{tile_prefix}{value}.png'))
+        cmd.append(path)
         line += 1
         if line == tileset_w // tile_w:
             cmd.extend(['+append', ')'])
@@ -94,7 +109,7 @@ def main():
     if line > 0:
         cmd.extend(['+append', ')'])
 
-    tmp = os.path.join(tile_dir, f'tileset{sys.argv[4]}.png')
+    tmp = os.path.join(parms[1], f'tileset{parms[2]}.png')
     cmd.extend(['-background', 'black', '-append', tmp])
     check_call(cmd)
 
@@ -124,13 +139,13 @@ def main():
                 {
                     'columns': tileset_w // tile_w,
                     'firstgid': 1,
-                    'image': f'tileset{sys.argv[4]}.png',
+                    'image': f'tileset{parms[2]}.png',
                     'imagewidth': tileset_w,
                     'imageheight': tileset_h,
                     'margin': 0,
-                    'name': tile_prefix,
+                    'name': 'tileset',
                     'spacing': 0,
-                    'tilecount': (image_w // tile_w) * (image_h // tile_h) - deleted,
+                    'tilecount': len(chksums),
                     'tilewidth': tile_w,
                     'tileheight': tile_h,
                 },
@@ -151,7 +166,7 @@ def main():
                 }
             ],
     }
-    with open(os.path.join(tile_dir, 'map.json'), 'w') as jsonmap:
+    with open(os.path.join(parms[1], 'map.json'), 'w') as jsonmap:
         jsonmap.write(json.dumps(tiled))
 
 if __name__ == '__main__':
