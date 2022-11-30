@@ -18,7 +18,7 @@ debug = lambda *x: None
 
 def main():
     if len(sys.argv) <= 5 or '--help' in sys.argv:
-        sys.exit(f'usage: {sys.argv[0]} big_image_files -- tile_dimensions tilemap_subdir tileset_dimensions')
+        sys.exit(f'usage: {sys.argv[0]} big_image_files... -- tile_dimensions tilemap_subdir tileset_dimensions')
 
     if '--' in sys.argv:
         files = sys.argv[1:sys.argv.index('--')]
