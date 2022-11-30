@@ -47,7 +47,7 @@ def main():
         tmp = subprocess.check_output(['identify', '-format', '%wx%h', file]).decode('utf-8')
         dim = re.search('(\d+)x(\d+)', tmp)
         w, h = int(dim.group(1)), int(dim.group(2))
-        if i == 0:
+        if i == len(files) - 1:
             image_w = w
             image_h = h
 
@@ -89,8 +89,8 @@ def main():
                     os.remove(path)
                 else:
                     chksums[chksum] = path
-                # just generate json of first image
-                if i == 0:
+                # just generate json of last image
+                if i == len(files) - 1:
                     tiles.append(list(chksums.keys()).index(chksum) + 1)
 
     debug(f'Removed {deleted} files')
