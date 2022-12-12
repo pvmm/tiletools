@@ -1,5 +1,11 @@
+tiletools
+=========
+
+Formerly known as `tilegen.py`, `tiletools` is a collection of tile-managing tools grouped together in a single repository. 
+
+
 tilegen.py
-==========
+----------
 
 Splits big image into smaller tiles, checks MD5 signature for repeated images, and deletes them if found. After the purge, a new smaller tileset is created according to specified dimensions. **Requires ImageMagick and Python 3.10 to work.** Usage is best explained by example:
 
@@ -14,8 +20,8 @@ Now you can specify multiple images in input and this script will generate uniqu
 ![Tiled with generated sample map](/docs/tiled.png "Tiled with generated sample map")
 
 
-Changes
--------
+vwrap.py
+--------
 
 `vwrap.py` script creates vertically wrapped around copies of the input tiles and stack them interleaved side by side in the output file. Wrapping around is useful for pixel-level scrolling in games on the MSX1, like Konami's Pippols. `width` defines the output image width. If the tiles won't fit, `vwrap.py` will wrap to the next 8 lines. If step is 1, the resulting image contains 8 times the amount of input tiles. Step can be 1 (8 times), 2 (4 times) and 4 (2 times). Usage:
 

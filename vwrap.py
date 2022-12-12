@@ -71,10 +71,9 @@ for file in inputs:
 
     im.close()
 
-new_height = math.ceil(len(new_images) / int(new_width)) * 8
-
 # flatten the results
 flatten = list(chain(*new_images))
+new_height = math.ceil(len(flatten) * 8 / int(new_width)) * 8
 
 # Create a new image to store the resulting tiles
 result_im = Image.new("RGB", (new_width, new_height))
@@ -91,4 +90,5 @@ for new_im in flatten:
 
 # Save the result image
 result_im.save(output)
-print('New image "%s" created from %i original tiles, resulting in a total of %i tiles.' % (output, ntiles, len(new_images)))
+print('New image "%s" created from %i original tiles, resulting in a total of %i tiles in a %ix%i configuration.'
+      % (output, ntiles, len(flatten), new_width, new_height))
