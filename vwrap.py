@@ -82,9 +82,9 @@ for file in inputs:
                     for y in range(8):
                         # Calculate the new y position for the pixel
                         if direction == 'up':
-                            new_y = (y - 1 - i) % height
+                            new_y = (y - (i + 1) * step) % height
                         else:
-                            new_y = (y + 1 + i) % height
+                            new_y = (y + (i + 1) * step) % height
     
                         # Get the pixel at the current position
                         pixel = tmp.getpixel((x, y))
