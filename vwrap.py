@@ -28,20 +28,24 @@ if '--help' in sys.argv or len(sys.argv) < 4:
 if '--' in sys.argv:
     inputs = sys.argv[1:sys.argv.index('--')]
     try:
-        output, new_width, step = sys.argv[sys.argv.index('--') + 1:]
+        direction, output, new_width, step = sys.argv[sys.argv.index('--') + 1:]
     except ValueError:
         print("** missing parameter **")
         print_help();
 else:
     try:
         inputs = sys.argv[1:2]
-        output, new_width, step = sys.argv[2:4]
+        direction, output, new_width, step = sys.argv[2:5]
     except ValueError:
         print("** missing parameter **")
         print_help();
 
 new_width = int(new_width)
 step = int(step)
+
+if not direction in ('up', 'down'):
+    print('** direction should be "up" or "down" **')
+    print_help();
 
 if new_width == 0:
     print('** width should be a number greater than zero **')
@@ -77,7 +81,10 @@ for file in inputs:
                 for x in range(8):
                     for y in range(8):
                         # Calculate the new y position for the pixel
-                        new_y = (y - 1 - i) % height
+                        if direction == 'up':
+                            new_y = (y - 1 - i) % height
+                        else:
+                            new_y = (y + 1 + i) % height
     
                         # Get the pixel at the current position
                         pixel = tmp.getpixel((x, y))
