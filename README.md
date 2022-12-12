@@ -17,7 +17,12 @@ Now you can specify multiple images in input and this script will generate uniqu
 Changes
 -------
 
-`vwrap.py` script creates vertically wrapped around copies of the input tiles, which is useful for scrolling games on the MSX1. If step is 1, the resulting image contains 8 times the amount of input tiles. Step can be 1 (8 times), 2 (4 times) and 4 (2 times).
+`vwrap.py` script creates vertically wrapped around copies of the input tiles, which is useful for scrolling games on the MSX1. If step is 1, the resulting image contains 8 times the amount of input tiles. Step can be 1 (8 times), 2 (4 times) and 4 (2 times). Usage:
+
+```
+./vwrap.py <input_files...> -- <output_file> <width> <step>
+```
+
 
 
 TODO
