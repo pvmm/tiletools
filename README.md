@@ -29,6 +29,20 @@ vwrap.py
 ./vwrap.py <input_files...> -- <output_file> <width> <step>
 ```
 
+For instance, considering the two tiles below:
+
+![wrapped tile (input)](/docs/input.png "wrapped tile (input)")
+
+calling:
+
+```
+./vwrap.py input.png -- output.png 136 1
+```
+
+will result in:
+
+![wrapped tile (output)](/docs/output.png "wrapped tile (output)")
+
 
 TODO
 ----

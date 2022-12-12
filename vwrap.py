@@ -7,32 +7,53 @@ from PIL import Image
 from itertools import chain
 
 
-if '--help' in sys.argv or len(sys.argv) < 4:
-    print("usage: vwrap input_images -- output_image width step");
+def print_help():
+    print('Usage:')
+    print('')
+    print('  vwrap input_images -- direction output_image width step');
+    print('')
+    print('          input_images: list of input images')
+    print('          direction   : direction of next tiles (up or down)')
+    print('          output_image: result of wrapping around')
+    print('                 width: width of the output image')
+    print('                  step: next tile offset in pixels (1, 2 or 4)')
+    print('')
     sys.exit()
+
+
+if '--help' in sys.argv or len(sys.argv) < 4:
+    print_help();
 
 # get parameters even if the '--' separator is not specified.
 if '--' in sys.argv:
     inputs = sys.argv[1:sys.argv.index('--')]
-    output, new_width, step = sys.argv[sys.argv.index('--') + 1:]
+    try:
+        output, new_width, step = sys.argv[sys.argv.index('--') + 1:]
+    except ValueError:
+        print("** missing parameter **")
+        print_help();
 else:
-    inputs = sys.argv[1:2]
-    output, new_width, step = sys.argv[2:4]
+    try:
+        inputs = sys.argv[1:2]
+        output, new_width, step = sys.argv[2:4]
+    except ValueError:
+        print("** missing parameter **")
+        print_help();
 
 new_width = int(new_width)
 step = int(step)
 
 if new_width == 0:
-    print('width should be a number greater than zero.')
-    sys.exit()
+    print('** width should be a number greater than zero **')
+    print_help();
 
 if new_width % 8:
-    print('width should be divisible by 8.')
-    sys.exit()
+    print('** width should be divisible by 8 **')
+    print_help();
 
 if not step in [1, 2, 4]:
-    print('step should be 1, 2 or 4.')
-    sys.exit()
+    print('** step should be 1, 2 or 4 **')
+    print_help();
 
 ntiles = 0
 new_images = [[] for x in range(8 // step)]
