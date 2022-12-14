@@ -152,7 +152,7 @@ def main():
                     'imagewidth': tileset_w,
                     'imageheight': tileset_h,
                     'margin': 0,
-                    'name': 'tileset',
+                    'name': 'default',
                     'spacing': 0,
                     'tilecount': len(chksums),
                     'tilewidth': tile_w,

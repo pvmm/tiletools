@@ -9,15 +9,15 @@ from itertools import chain
 
 def print_help():
     print('Usage:')
-    print('')
-    print('  vwrap input_images -- direction output_image width step');
-    print('')
+    print()
+    print('    vwrap input_images -- direction output_image width step');
+    print()
     print('          input_images: list of input images')
     print('          direction   : direction of next tiles (up or down)')
     print('          output_image: result of wrapping around')
     print('                 width: width of the output image')
     print('                  step: next tile offset in pixels (1, 2 or 4)')
-    print('')
+    print()
     sys.exit()
 
 
@@ -30,14 +30,14 @@ if '--' in sys.argv:
     try:
         direction, output, new_width, step = sys.argv[sys.argv.index('--') + 1:]
     except ValueError:
-        print("** missing parameter **")
+        print('** missing parameter **')
         print_help();
 else:
     try:
         inputs = sys.argv[1:2]
         direction, output, new_width, step = sys.argv[2:5]
     except ValueError:
-        print("** missing parameter **")
+        print('** missing parameter **')
         print_help();
 
 new_width = int(new_width)
@@ -69,33 +69,48 @@ for file in inputs:
     # Get the width and height of the image
     width, height = im.size
 
-    for y_ in range(0, height, 8):
-        for x_ in range(0, width, 8):
+    for x_ in range(0, width, 8):
+        for y_ in range(0, height, 8):
             tmp = im.crop((x_, y_, x_ + 8, y_ + 8));
-            new_images[0].append(tmp)
 
-            # Iterate over the number of new tiles to create
-            for i in range(8 // step - 1):
-                new_im = Image.new("RGB", (8, 8))
+            if height > 8:
+                # Skip last tile
+                if y_ == height - 8:
+                    print("skipped", y_)
+                    continue
+                new_images[0].append(tmp)
 
-                for x in range(8):
-                    for y in range(8):
-                        # Calculate the new y position for the pixel
-                        if direction == 'up':
-                            new_y = (y - (i + 1) * step) % height
-                        else:
-                            new_y = (y + (i + 1) * step) % height
+                # Iterate over the number of new tiles to create
+                for i in range(8 // step - 1):
+                    new_im = im.crop((x_, y_ + i + step, x_ + 8, y_ + i + step + 8))
+
+                    # Add new tile to the list of new images
+                    new_images[i + 1].append(new_im)
+
+                ntiles += 1
+            else:
+                # Iterate over the number of new tiles to create
+                for i in range(8 // step - 1):
+                    new_im = Image.new('RGB', (8, 8))
+
+                    for x in range(8):
+                        for y in range(8):
+                            # Calculate the new y position for the pixel
+                            if direction == 'up':
+                                new_y = (y - (i + 1) * step) % height
+                            else:
+                                new_y = (y + (i + 1) * step) % height
     
-                        # Get the pixel at the current position
-                        pixel = tmp.getpixel((x, y))
+                            # Get the pixel at the current position
+                            pixel = tmp.getpixel((x, y))
 
-                        # Set the pixel at the new position in the new image
-                        new_im.putpixel((x, new_y), pixel)
+                            # Set the pixel at the new position in the new image
+                            new_im.putpixel((x, new_y), pixel)
 
-                # Add original and new tile to the list of new images
-                new_images[i + 1].append(new_im)
+                    # Add new tile to the list of new images
+                    new_images[i + 1].append(new_im)
 
-            ntiles += 1
+                ntiles += 1
 
     im.close()
 
@@ -104,7 +119,7 @@ flatten = list(chain(*new_images))
 new_height = math.ceil(len(flatten) * 8 / int(new_width)) * 8
 
 # Create a new image to store the resulting tiles
-result_im = Image.new("RGB", (new_width, new_height))
+result_im = Image.new('RGB', (new_width, new_height))
 
 # Paste each new image into the result image
 x = y = 0
