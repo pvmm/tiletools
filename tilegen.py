@@ -72,6 +72,12 @@ def main():
         prefix = os.path.join(parms[1], os.path.split(os.path.splitext(path)[0])[1])
         debug(f'creating {path} tiles...')
         check_call(['convert', path, '+repage', '-crop', parms[0], f'PNG32:{prefix}_%04d_.png'])
+    # count cropped files
+    count = 0
+    for file in os.listdir(parms[1]):
+        if os.path.isfile(os.path.join(parms[1], file)):
+            count += 1
+    debug('%i cropped files created.' % count)
 
     deleted = 0
     chksums = OrderedDict()
@@ -79,7 +85,7 @@ def main():
 
     with open(os.path.join(parms[1], 'removed.txt'), 'a+') as output:
         for i, source in enumerate(files):
-            prefix = os.path.splitext(source)[0]
+            prefix = os.path.splitext(os.path.split(source)[1])[0]
             for path in sorted(glob.glob(os.path.join(parms[1], f'{prefix}_*_.png'))):
                 chksum = subprocess.check_output(['identify', '-verbose', '-format', '%#', path]).strip()
                 if chksum in chksums:
@@ -92,13 +98,13 @@ def main():
                 # just generate json of last image
                 if i == len(files) - 1:
                     tiles.append(list(chksums.keys()).index(chksum) + 1)
-
     debug(f'Removed {deleted} files')
 
+    # create ImageMagick arguments
     line = 0
-    cmd = ['convert']
-
+    cmd = ['convert', '(']
     for path in chksums.values():
+        print('Adding %s file to output image' % path)
         if line == 0:
             cmd.append('(')
         cmd.append(path)
@@ -108,9 +114,12 @@ def main():
             line = 0
     if line > 0:
         cmd.extend(['+append', ')'])
+    cmd.append(')')
 
+    # add last arguments to command
     tmp = os.path.join(parms[1], f'tileset{parms[2]}.png')
-    cmd.extend(['-background', 'black', '-append', tmp])
+    cmd_args = ['-background', 'black', '-append', tmp]
+    cmd.extend(cmd_args)
     check_call(cmd)
 
     tiled = {
