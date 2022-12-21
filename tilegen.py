@@ -5,6 +5,9 @@ import os
 import re
 import json
 import glob
+import hashlib
+
+from PIL import Image
 
 import subprocess
 from subprocess import DEVNULL, STDOUT, check_call
@@ -12,30 +15,26 @@ from subprocess import DEVNULL, STDOUT, check_call
 from collections import OrderedDict
 
 
-debug = lambda *x: None
-#debug = lambda *x: print(*x)
+#debug = lambda *x: None
+debug = lambda *x: print(*x)
+use_palette = False
 
 
 def main():
+    global use_palette
+
     if len(sys.argv) <= 5 or '--help' in sys.argv:
         sys.exit(f'usage: {sys.argv[0]} big_image_files... -- tile_dimensions tilemap_subdir tileset_dimensions')
 
+    if '--pal' in sys.argv:
+        use_palette = True
+        del sys.argv[sys.argv.index('--pal')]
     if '--' in sys.argv:
         files = sys.argv[1:sys.argv.index('--')]
         parms = sys.argv[sys.argv.index('--') + 1:]
     else:
         files = sys.argv[1:1+1]
         parms = sys.argv[2:]
-
-    try:
-        check_call(['convert', '-help'], stdout=DEVNULL, stderr=STDOUT)
-    except FileNotFoundError:
-        sys.exit('Install ImageMagick or put the `convert` executable in your path')
-
-    try:
-        check_call(['identify', '-help'], stdout=DEVNULL, stderr=STDOUT)
-    except FileNotFoundError:
-        sys.exit('Install ImageMagick or put the `identify` executable in your path')
 
     if len(files) == 0:
         sys.exit('No input file specified')
@@ -44,12 +43,10 @@ def main():
     for i, file in enumerate(files):
         if not os.path.exists(file):
             sys.exit(f'File {file} not found')
-        tmp = subprocess.check_output(['identify', '-format', '%wx%h', file]).decode('utf-8')
-        dim = re.search('(\d+)x(\d+)', tmp)
-        w, h = int(dim.group(1)), int(dim.group(2))
-        if i == len(files) - 1:
-            image_w = w
-            image_h = h
+        image = Image.open(file)
+    else:
+        image_w, image_h = image.size
+    debug('image size: {image_w}x{image_h}')
 
     if not (tile_dim := re.search('(\d+)x(\d+)', parms[0])):
         sys.exit('Wrong tile dimensions, <number>x<number> expected')
@@ -62,65 +59,53 @@ def main():
     tileset_w, tileset_h = int(tileset_dim.group(1)), int(tileset_dim.group(2))
     if min(tileset_w, tileset_h) <= 0:
         sys.exit('Tileset dimensions should be greater than zero')
+    debug('tileset size: {tileset_w}x{tileset_h}')
 
     if not os.path.exists(parms[1]):
         debug(f'Creating subdirectory {parms[1]}...')
         os.mkdir(parms[1])
 
     debug('Cropping tiles from image...')
-    for path in files:
-        prefix = os.path.join(parms[1], os.path.split(os.path.splitext(path)[0])[1])
-        debug(f'creating {path} tiles...')
-        check_call(['convert', path, '+repage', '-crop', parms[0], f'PNG32:{prefix}_%04d_.png'])
-    # count cropped files
-    count = 0
-    for file in os.listdir(parms[1]):
-        if os.path.isfile(os.path.join(parms[1], file)):
-            count += 1
-    debug('%i cropped files created.' % count)
-
     deleted = 0
     chksums = OrderedDict()
     tiles = []
+    for path in files:
+        prefix = os.path.join(parms[1], os.path.split(os.path.splitext(path)[0])[1])
+        debug(f'creating {path} tiles...')
 
-    with open(os.path.join(parms[1], 'removed.txt'), 'a+') as output:
-        for i, source in enumerate(files):
-            prefix = os.path.splitext(os.path.split(source)[1])[0]
-            for path in sorted(glob.glob(os.path.join(parms[1], f'{prefix}_*_.png'))):
-                chksum = subprocess.check_output(['identify', '-verbose', '-format', '%#', path]).strip()
+        image = Image.open(path)
+        for y in range(0, image.size[1], tile_h):
+            for x in range(0, image.size[0], tile_w):
+                tile = image.crop((x, y, x + tile_w, y + tile_h))
+                chksum = hashlib.md5(tile.tobytes()).hexdigest()
                 if chksum in chksums:
+                    #debug(f'Deleting tile in "{path}", coordinates ({x}, {y}): identical tile already accounted for')
                     deleted += 1
-                    debug(f'Deleting file {path}: identical tile already accounted for')
-                    print(path, file=output)
-                    os.remove(path)
                 else:
-                    chksums[chksum] = path
-                # just generate json of last image
-                if i == len(files) - 1:
+                    #debug(f'Storing tile {chksum} in "{path}", coordinates ({x}, {y})')
+                    chksums[chksum] = tile
+                if path == files[-1]:
                     tiles.append(list(chksums.keys()).index(chksum) + 1)
+    debug('%i cropped tiles created.' % len(tiles))
     debug(f'Removed {deleted} files')
 
-    # create ImageMagick arguments
-    line = 0
-    cmd = ['convert', '(']
-    for path in chksums.values():
-        print('Adding %s file to output image' % path)
-        if line == 0:
-            cmd.append('(')
-        cmd.append(path)
-        line += 1
-        if line == tileset_w // tile_w:
-            cmd.extend(['+append', ')'])
-            line = 0
-    if line > 0:
-        cmd.extend(['+append', ')'])
-    cmd.append(')')
+    # create tileset
+    real_tileset_h = max(len(chksums) // tile_w, tileset_h)
+    if real_tileset_h != tileset_h:
+        debug('real tileset height differ from the specified parameter')
+    result_im = Image.new("RGB", (tileset_w, real_tileset_h))
+    x = y = 0
+    for index, (key, tile) in enumerate(chksums.items()):
+        if (index > 0) and (index % (tileset_w // tile_w) == 0):
+            y += tile_h
+            x = 0
+        debug('Adding tile %i to output image' % index)
+        result_im.paste(tile, (x, y))
+        x += tile_w
 
     # add last arguments to command
     tmp = os.path.join(parms[1], f'tileset{parms[2]}.png')
-    cmd_args = ['-background', 'black', '-append', tmp]
-    cmd.extend(cmd_args)
-    check_call(cmd)
+    result_im.save(tmp)
 
     tiled = {
         'compression_level': -1,
@@ -150,7 +135,7 @@ def main():
                     'firstgid': 1,
                     'image': f'tileset{parms[2]}.png',
                     'imagewidth': tileset_w,
-                    'imageheight': tileset_h,
+                    'imageheight': real_tileset_h,
                     'margin': 0,
                     'name': 'default',
                     'spacing': 0,
