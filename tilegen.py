@@ -6,6 +6,7 @@ import re
 import json
 import glob
 import hashlib
+import math
 
 from PIL import Image
 
@@ -15,8 +16,8 @@ from subprocess import DEVNULL, STDOUT, check_call
 from collections import OrderedDict
 
 
-#debug = lambda *x: None
-debug = lambda *x: print(*x)
+debug = lambda *x: None
+#debug = lambda *x: print(*x)
 use_palette = False
 
 
@@ -90,7 +91,7 @@ def main():
     debug(f'Removed {deleted} files')
 
     # create tileset
-    real_tileset_h = max(len(chksums) // tile_w, tileset_h)
+    real_tileset_h = max(math.ceil(len(chksums) / tile_w), tileset_h)
     if real_tileset_h != tileset_h:
         debug('real tileset height differ from the specified parameter')
     result_im = Image.new("RGB", (tileset_w, real_tileset_h))
@@ -99,7 +100,7 @@ def main():
         if (index > 0) and (index % (tileset_w // tile_w) == 0):
             y += tile_h
             x = 0
-        debug('Adding tile %i to output image' % index)
+        #debug('Adding tile %i to output image' % index)
         result_im.paste(tile, (x, y))
         x += tile_w
 
