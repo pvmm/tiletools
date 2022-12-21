@@ -40,7 +40,7 @@ There are two types of tiles in a tileset:
 * horizontal aligned tiles will wrap around themselves, not considering transition tiles;
 * vertical aligned tiles will be considered as transitional tiles and `vwrap.py` will create transitional tiles between them;
 
-You shouldn't mix vertical and horizontal tiles in the same file.
+You shouldn't mix vertical and horizontal tiles in the same file, because it creates unused wraping tiles.
 
 
 Usage
