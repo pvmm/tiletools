@@ -149,9 +149,6 @@ def main():
 
     args = parser.parse_args()
 
-    with open(args.conf, "rt") as fd:
-        conf = json.load(fd)
-
     with open(args.map_json, "rt") as fd:
         data = json.load(fd)
 
@@ -159,9 +156,9 @@ def main():
     mw = data.get("width", 0)
 
     if mh < args.rh or mh % args.rh:
-        parser.error("Map size height not multiple of the room size")
+        parser.error("Map size height not multiple of the room size (%i)" % args.rh)
     if mw < args.rw or mw % args.rw:
-        parser.error("Map size width not multiple of the room size")
+        parser.error("Map size width not multiple of the room size (%i)" % args.rw)
 
     tilewidth = data["tilewidth"]
     tileheight = data["tileheight"]
@@ -179,10 +176,12 @@ def main():
                 for i in range(args.rw):
                     for j in range(args.rh):
                         block.append(tile_layer[x + i + (y + j) * mw] - firstgid)
+                        print('x', block)
             else:
                 for j in range(args.rh):
                     for i in range(args.rw):
                         block.append(tile_layer[x + i + (y + j) * mw] - firstgid)
+                        sys.exit()
 
             # pack
             current = []
@@ -234,8 +233,9 @@ def main():
                 "%s: warning: 'Entities' layer not found" % path.basename(sys.argv[0]),
                 file=sys.stderr,
             )
-
     if len(entities_layer) and entities_layer["visible"]:
+        with open(args.conf, "rt") as fd:
+            conf = json.load(fd)
         et_names = [d["name"] for d in conf["entities"]]
         et_weigths = dict((d["name"], d["w"]) for d in conf["entities"])
         et_bytes = dict((d["name"], d["bytes"]) for d in conf["entities"])
