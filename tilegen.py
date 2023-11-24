@@ -49,13 +49,13 @@ def main():
         image_w, image_h = image.size
     debug('image size: {image_w}x{image_h}')
 
-    if not (tile_dim := re.search('(\d+)x(\d+)', parms[0])):
+    if not (tile_dim := re.search(r'(\d+)x(\d+)', parms[0])):
         sys.exit('Wrong tile dimensions, <number>x<number> expected')
     tile_w, tile_h = int(tile_dim.group(1)), int(tile_dim.group(2))
     if min(tile_w, tile_h) <= 0:
         sys.exit('Tile dimensions should be greater than zero')
 
-    if not (tileset_dim := re.search('(\d+)x(\d+)', parms[2])):
+    if not (tileset_dim := re.search(r'(\d+)x(\d+)', parms[2])):
         sys.exit('Wrong tileset dimensions, <number>x<number> expected')
     tileset_w, tileset_h = int(tileset_dim.group(1)), int(tileset_dim.group(2))
     if min(tileset_w, tileset_h) <= 0:
