@@ -75,8 +75,8 @@ TODO
 
 Some `tilegen.py` features I may add some day:
 
-* ~~Remove ImageMagick dependency;~~
-* ~~Allow multiple input files;~~
-* Create separated tilebanks when tilesets are bigger than 256 and use the screen region to decide which tilebank to use;
-* Detection of near-identical tiles; 
-* Detection of color-swapped tiles;
+* [x] Remove ImageMagick dependency;
+* [x] Allow multiple input files;
+* [ ] Create separated tilebanks when tilesets are bigger than 256 and use the screen region to decide which tilebank to use;
+* [ ] Detection of near-identical tiles; 
+* [ ] Detection of color-swapped tiles;
