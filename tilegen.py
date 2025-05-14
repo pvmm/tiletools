@@ -60,7 +60,7 @@ def main():
     tileset_w, tileset_h = int(tileset_dim.group(1)), int(tileset_dim.group(2))
     if min(tileset_w, tileset_h) <= 0:
         sys.exit('Tileset dimensions should be greater than zero')
-    debug('tileset size: {tileset_w}x{tileset_h}')
+    debug(f'tileset size: {tileset_w}x{tileset_h}')
 
     if not os.path.exists(parms[1]):
         debug(f'Creating subdirectory {parms[1]}...')
