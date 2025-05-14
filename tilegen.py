@@ -47,7 +47,7 @@ def main():
         image = Image.open(file)
     else:
         image_w, image_h = image.size
-    debug('image size: {image_w}x{image_h}')
+    debug(f'image size: {image_w}x{image_h}')
 
     if not (tile_dim := re.search(r'(\d+)x(\d+)', parms[0])):
         sys.exit('Wrong tile dimensions, <number>x<number> expected')
@@ -119,8 +119,8 @@ def main():
             },
         'nextlayerid': 2,
         'nextobjectid': 0,
-        'width': image_w // tile_w,
-        'height': image_h // tile_h,
+        'width': math.ceil(image_w / tile_w),
+        'height': math.ceil(image_h / tile_h),
         'infinite': False,
         'tilewidth': tile_w,
         'tileheight': tile_h,
@@ -132,7 +132,7 @@ def main():
         'tilesets':
             [
                 {
-                    'columns': tileset_w // tile_w,
+                    'columns': math.ceil(tileset_w / tile_w),
                     'firstgid': 1,
                     'image': f'tileset{parms[2]}.png',
                     'imagewidth': tileset_w,
@@ -151,8 +151,8 @@ def main():
                     'id': 1,
                     'name': 'Map',
                     'opacity': 1,
-                    'width': image_w // tile_w,
-                    'height': image_h // tile_h,
+                    'width': math.ceil(image_w / tile_w),
+                    'height': math.ceil(image_h / tile_h),
                     'type': 'tilelayer',
                     'visible': True,
                     'x': 0,
