@@ -7,18 +7,18 @@ import json
 import glob
 import hashlib
 import math
+import subprocess
+from subprocess import DEVNULL, STDOUT, check_call
+from collections import OrderedDict
 
 from PIL import Image
 
-import subprocess
-from subprocess import DEVNULL, STDOUT, check_call
 
-from collections import OrderedDict
-
-
-debug = lambda *x: None
-#debug = lambda *x: print(*x)
-use_palette = False
+# debug function
+if os.getenv('DEBUG'):
+    debug = lambda *x: print(*x)
+else:
+    debug = lambda *x: None
 
 
 def main():
