@@ -84,7 +84,7 @@ def main():
 
         for y in range(0, image.size[1], tile_h):
             for x in range(0, image.size[0], tile_w):
-                tile = image.crop((x, y, x + tile_w, y + tile_h))
+                tile = image.crop((x, y, x + tile_w, y + tile_h)).convert("RGB")
                 chksum = hashlib.md5(tile.tobytes()).hexdigest()
                 if chksum in chksums:
                     #debug(f'Deleting tile in "{path}", coordinates ({x}, {y}): identical tile already accounted for')
@@ -112,7 +112,7 @@ def main():
         if (index > 0) and (index % (tileset_w // tile_w) == 0):
             y += tile_h
             x = 0
-        debug('Adding tile %i to output image at (%i, %i)' % (index, x, y))
+        #debug('Adding tile %i to output image at (%i, %i)' % (index, x, y))
         if y + (1 if palette  else 0) >= real_tileset_h:
             print('WARNING: ** tiles don\'t fit in specified tileset height **', file=sys.stderr)
         result_image.paste(tile, (x, y + (1 if palette else 0)))
