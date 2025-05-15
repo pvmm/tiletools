@@ -13,7 +13,7 @@ Splits big image into smaller tiles, checks MD5 signature for repeated images, a
 tilegen.py ./sample/maniac.png -- 16x16 result 256x192
 ```
 
-will create a 256x192 tileset called `result_256x192.png` composed of the original `sample/maniac.png` image, cut in 16x16 tiles. Identical tiles are removed if found, so the actual number of tiles may be smaller than the total number of tiles in the original. A *Tiled*-compatible `result_map.json` that uses the tileset will also be created. You can use the `result` prefix as the directory where both files will be created. 
+will create a `256x192` tileset called `result_256x192.png` composed of the original `sample/maniac.png` image, cut in `16x16` tiles. Identical tiles are removed if found, so the actual number of tiles may be smaller than the total number of tiles in the original. A *Tiled*-compatible `result_map.json` that uses the tileset will also be created. You can use the `result` prefix as the directory where both files will be created. 
 
 Now you can specify multiple images as input and this script will generate unique tiles from all of them, but it's the last image used that will create a `map.json` tilemap. These multiple files are separated from the rest of the parameters by a `--`. If no `--` is found, the previous behaviour of a single input file is considered for compatibility.
 
