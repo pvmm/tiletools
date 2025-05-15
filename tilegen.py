@@ -75,7 +75,7 @@ def main():
         debug(f'Creating {path} tiles...')
 
         image = Image.open(path)
-        # detect palette on first line
+        # autodetect palette on first line
         if (image.size[1] - 1) / tile_h == image.size[1] // tile_h:
             palimg = image.crop((0, 0, 16, 1))
             image = image.crop((0, 1, image.size[0], image.size[1]))
