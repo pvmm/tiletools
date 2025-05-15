@@ -47,7 +47,7 @@ def main():
         image = Image.open(file)
     else:
         image_w, image_h = image.size
-    debug(f'image size: {image_w}x{image_h}')
+    debug(f'-- image size: {image_w}x{image_h}')
 
     if not (tile_dim := re.search(r'(\d+)x(\d+)', parms[0])):
         sys.exit('Wrong tile dimensions, <number>x<number> expected')
@@ -60,7 +60,7 @@ def main():
     tileset_w, tileset_h = int(tileset_dim.group(1)), int(tileset_dim.group(2))
     if min(tileset_w, tileset_h) <= 0:
         sys.exit('Tileset dimensions should be greater than zero')
-    debug(f'tileset size: {tileset_w}x{tileset_h}')
+    debug(f'-- tileset size: {tileset_w}x{tileset_h}')
 
     if not os.path.exists(parms[1]):
         debug(f'Creating subdirectory {parms[1]}...')
@@ -72,7 +72,7 @@ def main():
     tiles = []
     for path in files:
         prefix = os.path.join(parms[1], os.path.split(os.path.splitext(path)[0])[1])
-        debug(f'creating {path} tiles...')
+        debug(f'Creating {path} tiles...')
 
         image = Image.open(path)
         for y in range(0, image.size[1], tile_h):
