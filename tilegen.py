@@ -64,7 +64,7 @@ def main():
 
     if not os.path.exists(parms[1]):
         debug(f'Creating subdirectory {parms[1]}...')
-        os.mkdir(parms[1])
+        os.makedirs(parms[1])
 
     debug('Cropping tiles from image...')
     deleted = 0
