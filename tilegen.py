@@ -22,14 +22,14 @@ else:
 
 
 def main():
-    global use_palette
+    palette = False
 
     if len(sys.argv) <= 5 or '--help' in sys.argv:
-        sys.exit(f'usage: {sys.argv[0]} big_image_files... -- tile_dimensions tilemap_subdir tileset_dimensions')
+        sys.exit(f'usage: {sys.argv[0]} ?--has-palette? big_image_files... -- tile_dimensions tilemap_prefix tileset_dimensions')
 
-    if '--pal' in sys.argv:
-        use_palette = True
-        del sys.argv[sys.argv.index('--pal')]
+    if '--has-palette' in sys.argv:
+        palette = True
+        del sys.argv[sys.argv.index('--has-palette')]
     if '--' in sys.argv:
         files = sys.argv[1:sys.argv.index('--')]
         parms = sys.argv[sys.argv.index('--') + 1:]
@@ -75,6 +75,13 @@ def main():
         debug(f'Creating {path} tiles...')
 
         image = Image.open(path)
+        # detect palette on first line
+        if (image.size[1] - 1) / tile_h == image.size[1] // tile_h:
+            palimg = image.crop((0, 0, 16, 1))
+            image = image.crop((0, 1, image.size[0], image.size[1]))
+            #palimg.save('palette.png')
+            debug('Extracted palette data')
+
         for y in range(0, image.size[1], tile_h):
             for x in range(0, image.size[0], tile_w):
                 tile = image.crop((x, y, x + tile_w, y + tile_h))
@@ -88,25 +95,36 @@ def main():
                 if path == files[-1]:
                     tiles.append(list(chksums.keys()).index(chksum) + 1)
     debug('%i cropped tiles created.' % len(tiles))
-    debug(f'Removed {deleted} files')
+    debug(f'removed {deleted} files')
 
     # create tileset
-    real_tileset_h = max(math.ceil(len(chksums) / tile_w), tileset_h)
-    if real_tileset_h != tileset_h:
-        debug('real tileset height differ from the specified parameter')
-    result_im = Image.new("RGB", (tileset_w, real_tileset_h))
+    real_tileset_h = max(math.ceil(len(chksums) / tile_w), tileset_h) + (1 if palette else 0)
+    result_image = Image.new("RGB", (tileset_w, real_tileset_h))
+
+    if real_tileset_h != tileset_h + (1 if palette else 0):
+        debug('Real tileset height differ from the specified parameter')
+    if palette:
+        # put palette back on resulting image
+        result_image.paste(palimg, (0, 0))
+
     x = y = 0
     for index, (key, tile) in enumerate(chksums.items()):
         if (index > 0) and (index % (tileset_w // tile_w) == 0):
             y += tile_h
             x = 0
-        #debug('Adding tile %i to output image' % index)
-        result_im.paste(tile, (x, y))
+        debug('Adding tile %i to output image at (%i, %i)' % (index, x, y))
+        if y + (1 if palette  else 0) >= real_tileset_h:
+            print('WARNING: ** tiles don\'t fit in specified tileset height **', file=sys.stderr)
+        result_image.paste(tile, (x, y + (1 if palette else 0)))
         x += tile_w
 
     # add last arguments to command
-    tmp = os.path.join(parms[1], f'tileset{parms[2]}.png')
-    result_im.save(tmp)
+    if palette:
+        # Add "pal" if image has a palete
+        tmp = f'{prefix}-{parms[2]}.pal.png'
+    else:
+        tmp = f'{prefix}-{parms[2]}.png'
+    result_image.save(tmp)
 
     tiled = {
         'compression_level': -1,
@@ -134,7 +152,7 @@ def main():
                 {
                     'columns': math.ceil(tileset_w / tile_w),
                     'firstgid': 1,
-                    'image': f'tileset{parms[2]}.png',
+                    'image': tmp,
                     'imagewidth': tileset_w,
                     'imageheight': real_tileset_h,
                     'margin': 0,
@@ -161,8 +179,9 @@ def main():
                 }
             ],
     }
-    with open(os.path.join(parms[1], 'map.json'), 'w') as jsonmap:
+    with open(f'{prefix}.json', 'w') as jsonmap:
         jsonmap.write(json.dumps(tiled))
+
 
 if __name__ == '__main__':
     main()
