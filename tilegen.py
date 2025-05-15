@@ -152,7 +152,7 @@ def main():
                 {
                     'columns': math.ceil(tileset_w / tile_w),
                     'firstgid': 1,
-                    'image': tmp,
+                    'image': os.path.split(tmp)[1], # remove directory
                     'imagewidth': tileset_w,
                     'imageheight': real_tileset_h,
                     'margin': 0,
