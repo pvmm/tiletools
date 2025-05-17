@@ -9,6 +9,7 @@ import hashlib
 import math
 import subprocess
 import pprint
+import re
 from subprocess import DEVNULL, STDOUT, check_call
 from collections import OrderedDict
 
@@ -182,7 +183,9 @@ def main():
     }
     with open(f'{prefix}.json', 'w') as jsonmap:
         json = pprint.pformat(tiled, indent=4, width=80, compact=True)
-        jsonmap.write(json.replace("'", '"').replace('True', 'true').replace('False', 'false'))
+        json = re.sub(r': True\b', ': true', json, count=0, flags=0)
+        json = re.sub(r': False\b', ': false', json, count=0, flags=0)
+        jsonmap.write(json.replace("'", '"'))
 
 
 if __name__ == '__main__':
