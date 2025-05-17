@@ -8,6 +8,7 @@ import glob
 import hashlib
 import math
 import subprocess
+import pprint
 from subprocess import DEVNULL, STDOUT, check_call
 from collections import OrderedDict
 
@@ -180,7 +181,8 @@ def main():
             ],
     }
     with open(f'{prefix}.json', 'w') as jsonmap:
-        jsonmap.write(json.dumps(tiled))
+        json = pprint.pformat(tiled, indent=4, width=80, compact=True)
+        jsonmap.write(json.replace("'", '"').replace('True', 'true').replace('False', 'false'))
 
 
 if __name__ == '__main__':
