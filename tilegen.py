@@ -182,6 +182,7 @@ def main():
             ],
     }
     with open(f'{prefix}.json', 'w') as jsonmap:
+        # convert pretty print output into proper json for Tiled
         json = pprint.pformat(tiled, indent=4, width=80, compact=True)
         json = re.sub(r': True\b', ': true', json, count=0, flags=0)
         json = re.sub(r': False\b', ': false', json, count=0, flags=0)
