@@ -95,6 +95,7 @@ def main():
                     #debug(f'Storing tile {chksum} in "{path}", coordinates ({x}, {y})')
                     chksums[chksum] = tile
                 if path == files[-1]:
+                    # add tile index to tilemap array
                     tiles.append(list(chksums.keys()).index(chksum) + 1)
     debug('%i cropped tiles created.' % len(tiles))
     debug(f'removed {deleted} files')
@@ -116,7 +117,7 @@ def main():
             x = 0
         #debug('Adding tile %i to output image at (%i, %i)' % (index, x, y))
         if y + (1 if palette  else 0) >= real_tileset_h:
-            print('WARNING: ** tiles don\'t fit in specified tileset height **', file=sys.stderr)
+            print("WARNING: ** tiles don't fit in specified tileset height **", file=sys.stderr)
         result_image.paste(tile, (x, y + (1 if palette else 0)))
         x += tile_w
 
